@@ -11,10 +11,10 @@ from datetime import datetime
 def get_router_mac_address(ip_address):
     try:
         # arpコマンドを実行して結果を取得
-        result = subprocess.run(['arp', '-a', ip_address], capture_output=True, text=True)
+        result = subprocess.run(['ip', 'neigh', 'show', ip_address], capture_output=True, text=True)
         
         # MACアドレスを抽出
-        mac_address = result.stdout.split('\n')[3].split()[1]
+        mac_address = result.stdout.split()[4]
         
         return mac_address
 
