@@ -6,41 +6,55 @@ from selenium.webdriver.support import expected_conditions as EC
 import time
 import subprocess
 import re
+import os
+import platform
 from datetime import datetime
 
+# タイトル画面
+print("WSR-1500AX2L FW アップデート & 自動設定スクリプト")
+
+# OS判別
+os_name = platform.system()
+
+match os_name:
+    case "Windows":
+        print("Running on Windows")
+        driver_path = "./chromedriver.exe" 
+    case "Linux":
+        print("Running on Linux")
+        driver_path = "./chromedriver" 
+    case _:
+        print("Cannot detect OS")
+
+# ルータMACアドレス取得
 def get_router_mac_address(ip_address):
     try:
-        # arpコマンドを実行して結果を取得
+        # ipコマンドを実行して結果を取得
         result = subprocess.run(['ip', 'neigh', 'show', ip_address], capture_output=True, text=True)
-        
         # MACアドレスを抽出
         mac_address = result.stdout.split()[4]
-        
         return mac_address
-
     except Exception as e:
         print("Error occurred:", e)
-    
-    return None
+        return None
 
 def append_to_file(filename, data):
     with open(filename, 'a') as file:
         file.write(data + '\n')
 
-ip_address = "192.168.11.1"
-router_mac_address = get_router_mac_address(ip_address)
-if router_mac_address:
-    current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    data_to_append = f"{current_time}: Router MAC Address for {ip_address}: {router_mac_address}"
-    print(data_to_append)
-    
-    # ファイルにデータを追記
-    append_to_file("router_mac_addresses.txt", data_to_append)
-else:
-    print(f"Router MAC Address for {ip_address} not found.")
+        ip_address = "192.168.11.1"
+        router_mac_address = get_router_mac_address(ip_address)
+        if router_mac_address:
+            current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            data_to_append = f"{current_time}: Router MAC Address for {ip_address}: {router_mac_address}"
+            print(data_to_append)
+            # ファイルにデータを追記
+            append_to_file("router_mac_addresses.txt", data_to_append)
 
+        else:
+            print(f"Router MAC Address for {ip_address} not found.")
 
-print("WSR-1500AX2L FW アップデート & 自動設定スクリプト")
+# PW入力
 print("> adminのパスワードを入力してEnterキーを押下してください。")
 password = input()
 
@@ -48,10 +62,8 @@ password = input()
 print("> このウインドウにファームウェアのファイルをドラッグアンドドロップしてEnterキーを押下してください。")
 firmware_file_path = input()
 
-# WebDriverの初期化（Chromeの場合）
-driver_path = "./chromedriver.exe" # 実行ファイルと同じ階層にWebDriverのバイナリを配置
+# WebDriverの初期化
 driver = webdriver.Chrome(service=ChromeService(driver_path))
-
 driver.implicitly_wait(10)
 
 # ルーターのIPアドレス
@@ -80,8 +92,8 @@ if driver.find_element(By.ID, "easymesh_setting").is_selected():
   driver.find_element(By.ID, "easymesh_setting").click()
   driver.find_element(By.ID, "button_1").click()
   time.sleep(8)
-WebDriverWait(driver, 300).until(EC.visibility_of_element_located((By.ID,"label_easymesh_warnning")))
-driver.switch_to.default_content()
+  WebDriverWait(driver, 300).until(EC.visibility_of_element_located((By.ID,"label_easymesh_warnning")))
+  driver.switch_to.default_content()
 
 # WPA3 SSIDを無効化
 
